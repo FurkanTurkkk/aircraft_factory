@@ -3,18 +3,18 @@ from django.contrib.auth.models import AbstractUser
 
 class Team(models.Model):
     TEAM_CHOICES = [
-        ('KANAT TAKIMI','KANAT'),
-        ('GOVDE TAKIMI','GOVDE'),
-        ('KUYRUK TAKIMI','KUYRUK'),
-        ('AVIYONIK TAKIMI','AVIYONIK'),
-        ('MONTAJ TAKIMI','MONTAJ')
+        ('KANAT TAKIMI','KANAT TAKIMI'),
+        ('GOVDE TAKIMI','GOVDE TAKIMI'),
+        ('KUYRUK TAKIMI','KUYRUK TAKIMI'),
+        ('AVIYONIK TAKIMI','AVIYONIK TAKIMI'),
+        ('MONTAJ TAKIMI','MONTAJ TAKIMI'),
     ]
 
     name = models.CharField(max_length=50,choices=TEAM_CHOICES, unique=True)
 
     def __str__(self):
         return self.get_name_display()
-    
+
 
 class Personnel(AbstractUser):
     team = models.ForeignKey(Team,on_delete=models.CASCADE,related_name='personnels',null=True,blank=True)

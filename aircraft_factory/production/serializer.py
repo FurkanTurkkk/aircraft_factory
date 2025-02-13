@@ -15,7 +15,7 @@ class PersonnelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id','username','password','team','team_id']
+        fields = ['id','username','password','email','team','team_id']
         extra_kwargs = {'password':{'write_only' : True}}
 
     def create(self, validated_data):
@@ -33,3 +33,8 @@ class AircraftSerializer(serializers.ModelSerializer):
     class Meta:
         model = Aircraft
         fields = ['id','type','assembly_date','parts']
+
+class AssemblyRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssemblyRegistration
+        fields = ['id','aircraft','parts_used','assembler','assembly_date']
