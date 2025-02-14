@@ -25,7 +25,7 @@ class PersonnelSerializer(serializers.ModelSerializer):
 class PartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Part
-        fields = ['id','part_type','variant_type','stock','aircraft','added_by']
+        fields = ['id','part_type', 'airplane_type_of_part', 'stock', 'aircraft', 'added_by']
     
 class AircraftSerializer(serializers.ModelSerializer):
     parts = PartSerializer(many=True,read_only=True)

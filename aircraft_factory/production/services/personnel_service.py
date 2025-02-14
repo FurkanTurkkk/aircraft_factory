@@ -1,5 +1,4 @@
 from django.contrib.auth import authenticate, login
-from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from production.exceptions.custom_exception import BusinessException

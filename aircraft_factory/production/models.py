@@ -31,6 +31,7 @@ class Aircraft(models.Model):
     ]
     type = models.CharField(max_length=20,choices=AIRCRAFT_TYPE)
     assembly_date = models.DateTimeField(auto_now_add=True)
+    quantity = models.PositiveBigIntegerField(default=0)
 
     def __str__(self):
         return f"{self.type}-{self.id}"
@@ -51,10 +52,15 @@ class Part(models.Model):
     ]
 
     part_type = models.CharField(max_length=20,choices=PART_TYPE)
-    variant_type = models.CharField(max_length=20,choices=AIRPLANE_TYPE,default='')
+    airplane_type_of_part = models.CharField(max_length=20, choices=AIRPLANE_TYPE, default='')
     stock = models.PositiveBigIntegerField(default=0)
     aircraft = models.ForeignKey(Aircraft,on_delete=models.CASCADE,related_name='parts',null=True,blank=True)
     added_by = models.ForeignKey(Personnel,on_delete=models.CASCADE,related_name='added_parts')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['part_type','airplane_type_of_part'],name='unique_part') # For unique part with part of aircraft
+        ]
     
 
     def __str__(self):
@@ -79,5 +85,5 @@ class AssemblyRegistration(models.Model):
     assembly_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Montaj kayıt {self.id} - Aircraft: {self.aircraft.type}"
+        return f"Assembly registration {self.id} - Aircraft: {self.aircraft.type}"
 
