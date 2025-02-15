@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from datetime import timedelta
 import os
 from pathlib import Path
+
+from production import templates
 from production.exceptions import custom_exception
 from production.exceptions.custom_exception import custom_exception_handler
 
@@ -62,7 +64,9 @@ ROOT_URLCONF = 'aircraft_factory.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            BASE_DIR / 'production' / 'templates'
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -130,17 +134,13 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
 
-# Django REST Framework ayarları
 REST_FRAMEWORK = {
-    # Authentication olarak JWT kullanımı
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    # Özel exception handler (sistemimizde oluşturduğumuz handler)
     'EXCEPTION_HANDLER': 'production.exceptions.custom_exception.custom_exception_handler',
 }
 
-# SimpleJWT ayarları (JWT token süresi, algoritma vb.)
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=50),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -165,7 +165,6 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'production.Personnel'
 
-# Logging ayarları: Hata ve uyarıların loglanması için
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -176,7 +175,7 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'WARNING',  # WARNING ve üstü seviyeler loglanır
+        'level': 'WARNING',
     },
 }
 

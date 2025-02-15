@@ -1,89 +1,68 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+
 class Team(models.Model):
     TEAM_CHOICES = [
-        ('KANAT TAKIMI','KANAT TAKIMI'),
-        ('GOVDE TAKIMI','GOVDE TAKIMI'),
-        ('KUYRUK TAKIMI','KUYRUK TAKIMI'),
-        ('AVIYONIK TAKIMI','AVIYONIK TAKIMI'),
-        ('MONTAJ TAKIMI','MONTAJ TAKIMI'),
+        ('KANAT TAKIMI', 'KANAT TAKIMI'),
+        ('GOVDE TAKIMI', 'GOVDE TAKIMI'),
+        ('KUYRUK TAKIMI', 'KUYRUK TAKIMI'),
+        ('AVIYONIK TAKIMI', 'AVIYONIK TAKIMI'),
+        ('MONTAJ TAKIMI', 'MONTAJ TAKIMI'),
     ]
-
-    name = models.CharField(max_length=50,choices=TEAM_CHOICES, unique=True)
-
-    def __str__(self):
-        return self.get_name_display()
+    name = models.CharField(max_length=50, choices=TEAM_CHOICES, unique=True)
 
 
 class Personnel(AbstractUser):
-    team = models.ForeignKey(Team,on_delete=models.CASCADE,related_name='personnels',null=True,blank=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='personnels', null=True, blank=True)
 
-    def __str__(self):
-        return self.username
 
 class Aircraft(models.Model):
     AIRCRAFT_TYPE = [
-        ('TB2','TB2'),
-        ('TB3','TB3'),
-        ('AKINCI','AKINCI'),
-        ('KIZILELMA','KIZILELMA')
+        ('TB2', 'TB2'),
+        ('TB3', 'TB3'),
+        ('AKINCI', 'AKINCI'),
+        ('KIZILELMA', 'KIZILELMA')
     ]
-    type = models.CharField(max_length=20,choices=AIRCRAFT_TYPE)
-    assembly_date = models.DateTimeField(auto_now_add=True)
-    quantity = models.PositiveBigIntegerField(default=0)
+    type = models.CharField(max_length=20, choices=AIRCRAFT_TYPE, unique=True)
 
-    def __str__(self):
-        return f"{self.type}-{self.id}"
 
 class Part(models.Model):
     PART_TYPE = [
-        ('KANAT','KANAT'),
-        ('GOVDE','GOVDE'),
-        ('KUYRUK','KUYRUK'),
-        ('AVIYONIK','AVIYONIK')
-    ]
-    
-    AIRPLANE_TYPE = [
-        ('TB2','TB2'),
-        ('TB3','TB3'),
-        ('AKINCI','AKINCI'),
-        ('KIZILELMA','KIZILELMA')
+        ('KANAT', 'KANAT'),
+        ('GOVDE', 'GOVDE'),
+        ('KUYRUK', 'KUYRUK'),
+        ('AVIYONIK', 'AVIYONIK')
     ]
 
-    part_type = models.CharField(max_length=20,choices=PART_TYPE)
-    airplane_type_of_part = models.CharField(max_length=20, choices=AIRPLANE_TYPE, default='')
-    stock = models.PositiveBigIntegerField(default=0)
-    aircraft = models.ForeignKey(Aircraft,on_delete=models.CASCADE,related_name='parts',null=True,blank=True)
-    added_by = models.ForeignKey(Personnel,on_delete=models.CASCADE,related_name='added_parts')
+    type = models.CharField(max_length=20, choices=PART_TYPE)
+    aircraft = models.ForeignKey(Aircraft, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    creator = models.ForeignKey(Personnel, on_delete=models.DO_NOTHING)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class Inventory(models.Model):
+    aircraft = models.ForeignKey(Aircraft, on_delete=models.CASCADE,default=0)
+    part_type = models.CharField(max_length=20,default="")
+    quantity = models.PositiveBigIntegerField(default=0)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['part_type','airplane_type_of_part'],name='unique_part') # For unique part with part of aircraft
-        ]
-    
+        unique_together = ('aircraft', 'part_type') # Create inventory database only one registration to same aircraft and part type
 
-    def __str__(self):
-        return f"{self.get_part_type_display()} - Stock: {self.stock}"
-    
-    def increase_stock(self,quantity):
-        self.stock += quantity
-        self.save()
-    
-    def decrease_stock(self,quantity):
-        if self.stock < quantity:
-            raise ValueError("Stok sayısı sıfır(0) ın altına inemez!")
-        self.stock -= quantity
-        self.save()
-        if self.stock == 0:
-            print(f"UYARI: {self.get_part_type_display()} stoğu bitti!")
 
-class AssemblyRegistration(models.Model):
-    aircraft = models.ForeignKey(Aircraft,on_delete=models.CASCADE,related_name='assembly_registration')
-    parts_used = models.ManyToManyField(Part,related_name='assembly_registration')
-    assembler = models.ForeignKey(Personnel,on_delete=models.CASCADE,related_name='assembly_transactions')
-    assembly_date = models.DateTimeField(auto_now_add=True)
+class Assembly(models.Model):
+    aircraft = models.ForeignKey(Aircraft, on_delete=models.DO_NOTHING)
+    created_by = models.ForeignKey(Personnel, on_delete=models.DO_NOTHING)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Assembly registration {self.id} - Aircraft: {self.aircraft.type}"
 
+class AssemblyItem(models.Model):
+    assembly = models.ForeignKey(Assembly, on_delete=models.CASCADE)
+    item = models.ForeignKey(Inventory, on_delete=models.DO_NOTHING,default=0)
+    quantity = models.PositiveBigIntegerField(default=0)
+
+class ManufacturedAircraft(models.Model):
+    assembly = models.ForeignKey(Assembly, on_delete=models.DO_NOTHING)
+    aircraft = models.ForeignKey(Aircraft, on_delete=models.DO_NOTHING)
+    created_at = models.DateTimeField(auto_now_add=True)

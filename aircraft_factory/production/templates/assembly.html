@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Uçak Montajı</title>
+</head>
+<body>
+    <h1>Uçak Montajı</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="airplane_id">Uçak ID:</label>
+        <input type="text" id="airplane_id" name="airplane_id">
+        <br>
+        <label for="parts_used">Kullanılan Parçalar (virgülle ayrılmış):</label>
+        <input type="text" id="parts_used" name="parts_used">
+        <br>
+        <button type="submit">Montajı Tamamla</button>
+    </form>
+</body>
+</html>

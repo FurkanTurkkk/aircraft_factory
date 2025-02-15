@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Stok Azalt</title>
+</head>
+<body>
+    <h1>Stok Azalt</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="quantity">Miktar:</label>
+        <input type="number" id="quantity" name="quantity">
+        <br>
+        <button type="submit">Stok Azalt</button>
+    </form>
+</body>
+</html>

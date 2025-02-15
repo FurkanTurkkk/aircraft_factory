@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import Team, Aircraft
 
-# Register your models here.
+admin.site.register(Team)
+admin.site.register(Aircraft)

@@ -8,7 +8,6 @@ from production.services.personnel_service import PersonnelService
 @api_view(['POST'])
 @authentication_classes([])
 def register_view(request):
-
     data = request.data
     username = data['username']
     password = data['password']
@@ -21,9 +20,10 @@ def register_view(request):
         serializer = PersonnelSerializer(user)
         return Response(serializer.data)
     except BusinessException as e:
-        return Response({'error': e.detail},status=400)
+        return Response({'error': e.detail}, status=400)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
 
 @api_view(['POST'])
 @authentication_classes([])
@@ -34,13 +34,14 @@ def login_view(request):
 
     try:
         service = PersonnelService()
-        user, token = service.login(username,password,request)
+        user, token = service.login(username, password, request)
         serializer = PersonnelSerializer(user)
+
         return Response({
             'user': serializer.data,
             'token': token,
         })
     except BusinessException as e:
-        return Response({'error': e.detail},status=400)
+        return Response({'error': e.detail}, status=400)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
