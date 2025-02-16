@@ -1,0 +1,119 @@
+{
+	"info": {
+		"_postman_id": "b13f53a8-df10-4c61-95b5-7d311a827c88",
+		"name": "Aircraft",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "39796191"
+	},
+	"item": [
+		{
+			"name": "AUTH-VİEW",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\":\"test\",\n  \"password\":\"123321\",\n  \"email\":\"test1@gmail.com\",\n  \"team_id\":4\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://127.0.0.1:8000/api/user/register/"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"test\",\n    \"password\":\"123321\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://127.0.0.1:8000/api/user/login/"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "MANUFACTURED_AIRCRAFT",
+			"item": [
+				{
+					"name": "Get_all_manufactured_aircraft",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://127.0.0.1:8000/api/manufactured_aircraft/all/"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "INVENTORY",
+			"item": [
+				{
+					"name": "Increase-stock",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"part_id\":1,\n    \"quantity\":1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://127.0.0.1:8000/api/inventory/increase-stock/"
+					},
+					"response": []
+				},
+				{
+					"name": "Decrease-stock",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"part_id\":1,\n    \"quantity\":1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://127.0.0.1:8000/api/inventory/decrease-stock/"
+					},
+					"response": []
+				},
+				{
+					"name": "Get-all-inventory",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://127.0.0.1:8000/api/inventory/list/"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ASSEMBLY",
+			"item": []
+		}
+	]
+}
