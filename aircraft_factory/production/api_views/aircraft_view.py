@@ -1,11 +1,10 @@
 from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from production.exceptions.custom_exception import BusinessException
+
 from production.serializer import AircraftSerializer
 from production.services.aircraft_service import AircraftService
 

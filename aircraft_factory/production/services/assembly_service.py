@@ -1,15 +1,18 @@
 from production.exceptions.custom_exception import BusinessException
 from production.models import AssemblyItem, Assembly
 from production.services.inventory_service import InventoryService
+from production.services.manufactured_aircraft_service import ManufacturedAircraftService
 
 
 class AssemblyService:
-    def __init__(self, assembly = Assembly,
-                 assembly_item = AssemblyItem,
-                 inventory_service = InventoryService()):
+    def __init__(self, assembly=Assembly,
+                 assembly_item=AssemblyItem,
+                 inventory_service=InventoryService(),
+                 manufactured_aircraft_service=ManufacturedAircraftService()):
         self.assembly = assembly
         self.assembly_item = assembly_item
         self.inventory_service = inventory_service
+        self.manufactured_aircraft_service = manufactured_aircraft_service
 
     def start_assembly(self, aircraft_id, items, user_id, team):
         team_name = team.name
@@ -23,28 +26,40 @@ class AssemblyService:
 
         self._link_items_to_assembly(assembly, inventory_requirements)
 
+        self.manufactured_aircraft_service.add_manufactured_aircraft(assembly, assembly.aircraft)
+
         return assembly
 
+    def _find_assembly_by_id(self, assembly_id):
+        try:
+            return self.assembly.objects.get(id=assembly_id)
+        except Assembly.DoesNotExist:
+            raise BusinessException(f"Assembly not found by id : {assembly_id}")
+
     def _validate_items_and_get_requirements(self, aircraft_id, items):
-        inventory_requirements = []
+        part_requirements = []
 
         for item in items:
-            part_type = item['part_type']
+            part_id = item['part_id']
             required_quantity = item['quantity']
 
-            inventory = self.inventory_service.find_inventory_by_aircraft_id_and_part_type(
+            inventory = self.inventory_service.find_inventory_by_aircraft_id_and_part_id(
                 aircraft_id,
-                part_type
+                part_id
             )
 
             if inventory.quantity < required_quantity:
                 raise BusinessException(
-                    f"Insufficient stock for {part_type}. Available: {inventory.quantity}"
+                    f"Insufficient stock for {inventory.part.type}. Available: {inventory.quantity}"
                 )
 
-            inventory_requirements.append((inventory, required_quantity))
+            if inventory.quantity == 0:
+                raise BusinessException(
+                    f"Your part {inventory.part.type} for {inventory.aircraft.type} is out of stock. Don't forget to add.")
 
-        return inventory_requirements
+            part_requirements.append((inventory, required_quantity))
+
+        return part_requirements
 
     def _deduct_inventory_quantities(self, inventory_requirements):
         for inventory, quantity in inventory_requirements:
@@ -54,20 +69,18 @@ class AssemblyService:
     def _create_assembly_record(self, aircraft_id, user_id):
         return self.assembly.objects.create(
             aircraft_id=aircraft_id,
-            created_by=user_id
+            creator=user_id
         )
 
     def _link_items_to_assembly(self, assembly, inventory_requirements):
         for inventory, quantity in inventory_requirements:
             self.assembly_item.objects.create(
                 assembly=assembly,
-                item=inventory,
+                item=inventory.part,
                 quantity=quantity
             )
 
-
-    def _check_permission(self,team_name):
+    def _check_permission(self, team_name):
 
         if team_name != "MONTAJ TAKIMI":
             raise BusinessException(f"Members of {team_name} can not create aircraft")
-

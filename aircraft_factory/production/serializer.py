@@ -17,7 +17,7 @@ class PersonnelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'team','team_id']
+        fields = ['id', 'username', 'email', 'team', 'team_id']
 
 
 class AircraftSerializer(serializers.ModelSerializer):
@@ -33,11 +33,14 @@ class PartSerializer(serializers.ModelSerializer):
         model = Part
         fields = ['id', 'type', 'aircraft']
 
+
 class InventorySerializer(serializers.ModelSerializer):
     aircraft = AircraftSerializer(read_only=True)
+    part = PartSerializer(read_only=True)
+
     class Meta:
         model = Inventory
-        fields = ['id', 'aircraft', 'part_type', 'quantity']
+        fields = ['id', 'aircraft', 'part', 'quantity']
 
 
 class AssemblySerializer(serializers.ModelSerializer):
@@ -53,9 +56,11 @@ class AssemblyItemSerializer(serializers.ModelSerializer):
         model = AssemblyItem
         fields = ['id', 'assembly', 'item', 'quantity']
 
+
 class AssemblyItemRequestSerializer(serializers.Serializer):
-    part_type = serializers.CharField()
+    part_id = serializers.IntegerField()
     quantity = serializers.IntegerField(min_value=1)
+
 
 class AssemblyRequestSerializer(serializers.Serializer):
     aircraft_id = serializers.IntegerField()
@@ -64,6 +69,7 @@ class AssemblyRequestSerializer(serializers.Serializer):
 
 class ManufacturedAircraftSerializer(serializers.ModelSerializer):
     aircraft = AircraftSerializer(read_only=True)
+
     class Meta:
         model = ManufacturedAircraft
-        fields = ['id', 'aircraft']
+        fields = ['id', 'aircraft', 'created_at']

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Start Assembly Process</title>
+</head>
+<body>
+    <h2>Start Assembly Process</h2>
+
+    <form method="GET" action="{% url 'start_assembly_html' %}">
+        {% csrf_token %}
+
+        <!-- Uçak Seçimi -->
+        <label for="aircraft">Choose Aircraft:</label>
+        <select id="aircraft" name="aircraft" onchange="this.form.submit()">
+            <option value="">Select Aircraft</option>
+            {% for aircraft in aircrafts %}
+                <option value="{{ aircraft.id }}" {% if aircraft.id == selected_aircraft_id %}selected{% endif %}>{{ aircraft.type }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% if selected_aircraft_id %}
+    <form method="POST" action="{% url 'start_assembly' %}">
+        {% csrf_token %}
+
+        <!-- Parçalar -->
+        <div id="parts-container">
+            {% for part in parts %}
+                <div class="part">
+                    <label for="part-{{ part.id }}">{{ part.type }}</label>
+                    <input type="number" id="part-{{ part.id }}" name="items[{{ part.id }}]" min="1" placeholder="Quantity">
+                </div>
+            {% endfor %}
+        </div>
+
+        <br><br>
+
+        <button type="submit">Start Assembly</button>
+    </form>
+    {% endif %}
+</body>
+</html>

@@ -1,9 +1,15 @@
 # production/views/my_html_views.py
 
-from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db import transaction
+from django.shortcuts import render, redirect
+
+from production.models import Part, Aircraft
+from production.serializer import AssemblyRequestSerializer
 from production.services.aircraft_service import AircraftService
+from production.services.assembly_service import AssemblyService
+from production.services.inventory_service import InventoryService
 from production.services.part_service import PartService
 from production.services.personnel_service import PersonnelService
 from production.services.team_service import TeamService
@@ -18,6 +24,77 @@ def dashboard_view(request):
         'team_name': team_name,
     }
     return render(request, "dashboard.html", context)
+
+@login_required
+def list_of_inventory(request):
+    try:
+        service = InventoryService()
+
+        user = request.user
+        team = user.team
+
+        inventory_list = service.list_inventory(team)
+        context = {"inventory_list": inventory_list}
+        return render(request, "list_inventory.html", context)
+
+    except Exception as e:
+        messages.error(request, f"Bir hata oluştu: {str(e)}")
+        return redirect('dashboard')
+
+# Increase Quantity
+def increase_quantity(request):
+    if request.method == "POST":
+        service = InventoryService()
+        part_id = request.POST.get("part_id")
+        service.increase_quantity(part_id, 1)
+        return redirect('list_of_inventory_html')
+
+# Decrease Quantity
+def decrease_quantity(request):
+    if request.method == "POST":
+        service = InventoryService()
+        part_id = request.POST.get("part_id")
+        service.decrease_quantity(part_id, 1)
+        return redirect('list_of_inventory_html')
+
+
+@login_required
+def start_assembly_process_html(request):
+    selected_aircraft_id = request.GET.get('aircraft')  # Seçilen uçak ID'si
+    aircrafts = Aircraft.objects.all()  # Tüm uçakları al
+
+    # Parçaları sadece bir uçak seçildiyse al
+    parts = []
+    if selected_aircraft_id:
+        selected_aircraft = Aircraft.objects.get(id=selected_aircraft_id)
+        parts = Part.objects.filter(aircraft=selected_aircraft)
+
+    return render(request, 'create_assembly.html', {
+        'aircrafts': aircrafts,
+        'selected_aircraft_id': selected_aircraft_id,
+        'parts': parts,
+    })
+
+# Decrease Quantity
+def start_assembly(request):
+    if request.method == "POST":
+        serializer = AssemblyRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        personnel = request.user
+
+        with transaction.atomic():
+            service = AssemblyService()
+            assembly = service.start_assembly(
+                aircraft_id=serializer.validated_data['aircraft_id'],
+                items=serializer.validated_data['items'],
+                user_id=personnel,
+                team=request.user.team
+            )
+
+        assembly_service = AssemblyService()
+        assembly_service.start_assembly(aircraft_id=serializer.validated_data['aircraft_id'], user_id=personnel, team=request.user.team)
+
+        return redirect('start_assembly_html')
 
 
 # --- Aircraft İşlemleri ---
@@ -176,7 +253,7 @@ def login_html_view(request):
             from django.contrib.auth import login
             login(request, user)
             messages.success(request, "Giriş başarılı.")
-            return redirect("dashboard")
+            return redirect("list_of_inventory_html")
         except Exception as e:
             messages.error(request, str(e))
             return render(request, "login.html")

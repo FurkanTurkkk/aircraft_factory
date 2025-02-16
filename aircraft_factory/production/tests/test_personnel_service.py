@@ -1,53 +1,54 @@
-from django.test import TestCase, RequestFactory
-from django.contrib.auth import get_user_model
+import unittest
+
+from django.test import TestCase
+from unittest.mock import MagicMock, patch
+from production.models import Personnel, Team
+from production.exceptions.custom_exception import BusinessException
 from production.services.personnel_service import PersonnelService
 from production.services.team_service import TeamService
-from production.exceptions.custom_exception import BusinessException
 
-User = get_user_model()
 
 class PersonnelServiceTest(TestCase):
     def setUp(self):
-        self.team_service = TeamService()
-        self.personnel_service = PersonnelService(service_team=self.team_service)
-        self.team = self.team_service.create_team("MONTAJ TAKIMI")
-        self.user_data = {
-            'username': 'testuser',
-            'password': 'testpass123',
-            'email': 'testuser@example.com',
-            'team_id': self.team.id
-        }
-        self.request_factory = RequestFactory()
+        self.team = Team.objects.create(name="TestTeam")
+        self.personnel_service = PersonnelService(personnel_model=Personnel, team_service=TeamService())
 
-    def test_register_valid_team(self):
-        user = self.personnel_service.register(**self.user_data)
-        self.assertIsInstance(user, User)
-        self.assertEqual(user.username, self.user_data['username'])
+    def test_register_creates_and_returns_personnel_user_with_valid_team_id_and_sets_password_hash(self):
+        new_user = self.personnel_service.register("testuser", "testpass", "test@example.com", self.team.id)
+        self.assertEqual(new_user.username, "testuser")
+        self.assertEqual(new_user.email, "test@example.com")
+        self.assertEqual(new_user.team.id, self.team.id)
+        self.assertTrue(new_user.password)
+        self.assertNotEqual(new_user.password, "testpass")
 
-    def test_register_invalid_team(self):
-        invalid_team = self.team_service.create_team("GEÇERSİZ TAKIM")
-        self.user_data['team_id'] = invalid_team.id
-        with self.assertRaises(ValueError):
-            self.personnel_service.register(**self.user_data)
+    @patch('production.services.personnel_service.RefreshToken')
+    @patch('production.services.personnel_service.login')
+    @patch('production.services.personnel_service.authenticate')
+    def test_login_returns_personnel_user_and_access_token_when_credentials_are_valid(self, mock_authenticate,
+                                                                                      mock_login, mock_RefreshToken):
+        dummy_user = MagicMock()
+        dummy_user.id = 1
+        mock_authenticate.return_value = dummy_user
+        dummy_refresh = MagicMock()
+        dummy_refresh.access_token = "dummy_token"
+        mock_RefreshToken.for_user.return_value = dummy_refresh
+        dummy_request = MagicMock()
+        user, token = self.personnel_service.login("testuser", "testpass", dummy_request)
+        self.assertEqual(user, dummy_user)
+        self.assertEqual(token, "dummy_token")
+        mock_authenticate.assert_called_once_with(username="testuser", password="testpass")
+        mock_login.assert_called_once_with(dummy_request, dummy_user)
+        mock_RefreshToken.for_user.assert_called_once_with(dummy_user)
 
-    def test_login_valid_credentials(self):
-        user = self.personnel_service.register(**self.user_data)
-        request = self.request_factory.post('/login/')
-        # Manually add session support to the request
-        request.session = self.client.session
-        authenticated_user, token = self.personnel_service.login(
-            username=self.user_data['username'],
-            password=self.user_data['password'],
-            request=request
-        )
-        self.assertEqual(authenticated_user, user)
-        self.assertIsNotNone(token)
+    @patch('production.services.personnel_service.authenticate')
+    def test_login_raises_business_exception_when_credentials_are_invalid(self, mock_authenticate):
+        mock_authenticate.return_value = None
+        dummy_request = MagicMock()
+        with self.assertRaises(BusinessException) as context:
+            self.personnel_service.login("wronguser", "wrongpass", dummy_request)
+        self.assertIn("Invalid username or password", str(context.exception))
+        mock_authenticate.assert_called_once_with(username="wronguser", password="wrongpass")
 
-    def test_login_invalid_credentials(self):
-        request = self.request_factory.post('/login/')
-        with self.assertRaises(BusinessException):
-            self.personnel_service.login(
-                username='wronguser',
-                password='wrongpass',
-                request=request
-            )
+
+if __name__ == '__main__':
+    unittest.main()

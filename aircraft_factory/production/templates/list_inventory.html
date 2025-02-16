@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Inventory List</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Inventory List</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Part Type</th>
+                <th>Aircraft Type</th>
+                <th>Quantity</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inventory in inventory_list %}
+            <tr id="inventory-{{ inventory.id }}">
+                <td>{{ inventory.part.type }}</td>
+                <td>{{ inventory.aircraft.type }}</td>
+                <td class="quantity">{{ inventory.quantity }}</td>
+                <td>
+                    <!-- Increase Form -->
+                    <form method="POST" action="{% url 'increase_quantity' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="part_id" value="{{ inventory.part.id }}">
+                        <button type="submit">Increase</button>
+                    </form>
+                    <!-- Decrease Form -->
+                    <form method="POST" action="{% url 'decrease_quantity' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="part_id" value="{{ inventory.part.id }}">
+                        <button type="submit">Decrease</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
